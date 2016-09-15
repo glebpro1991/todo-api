@@ -50,6 +50,18 @@ app.post('/todos', function(req, res) {
     }, function (e) {
         res.sendStatus(400).json(e);
     });
+
+    /*
+
+    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+        return res.status(400);
+    }
+
+    body.description = body.description.trim();
+    body.id = todoNextId++;;
+    todos.push(body);
+    res.send('success');
+    */
 });
 
 //PUT /todos/:id
