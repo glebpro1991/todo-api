@@ -108,6 +108,96 @@ app.delete('/todos/:id', function(req, res) {
     } );
 });
 
+// GET /users
+app.get('/users', function(req, res) {
+    var query = req.query;
+    var where = {};
+    if(query.hasOwnProperty('email') && query.email.length > 0) {
+        where.password = query.email;
+    }
+
+    db.user.findAll({where: where}).then(function(users) {
+        res.json(users);
+    }, function(e) {
+        res.sendStatus(500).json(e);
+    });
+});
+
+// GET /user/:id
+app.get('/users/:id', function(req, res) {
+    var userId = parseInt(req.params.id, 10);
+    db.user.findById(userId).then(function(user) {
+        if(!!user) {
+            res.json(user.toJSON());
+        } else {
+            res.sendStatus(404);
+        }
+    }, function(e) {
+        res.sendStatus(404).json(e);
+    })
+});
+
+// POST /users
+app.post('/users', function(req, res) {
+    var body = _.pick(req.body, 'email', 'password');
+    db.user.create(body).then(function(user) {
+        res.json(user.toJSON());
+    }, function (e) {
+        res.sendStatus(400).json(e);
+    });
+});
+
+// PUT /users/:id
+app.put('/users/:id', function(req, res) {
+    var userId = parseInt(req.params.id, 10);
+    var body = _.pick(req.body, 'email', 'password');
+    var attributes = {};
+
+    if(body.hasOwnProperty('email')) {
+        attributes.email = body.email;
+    }
+
+    if(body.hasOwnProperty('password')) {
+        attributes.password = body.password;
+    }
+
+    db.user.findById(userId).then(function(user) {
+        if (user) {
+            user.update(attributes).then(function(user) {
+                res.json(user.toJSON());
+            }, function(e) {
+                res.sendStatus(400).json(e);
+        });
+        } else {
+            res.sendStatus(404);
+        }
+    }, function() {
+        res.sendStatus(500);
+    });
+});
+
+//DELETE /users/:id
+app.delete('/users/:id', function(req, res) {
+    var userId = parseInt(req.params.id, 10);
+    db.user.destroy({
+        where: {
+            id: userId
+        }
+    }).then(function(rowsDeleted) {
+        if(rowsDeleted === 0) {
+            res.json({
+                error: 'No user with this ID found'
+            });
+        } else {
+            res.sendStatus(204);
+        }
+    }, function() {
+        res.sendStatus(500);
+    });
+});
+
+
+// Create Model
 db.sequelize.sync().then(function() {
     app.listen(PORT, function() {
         console.log('express listening on port ' + PORT);
