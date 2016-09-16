@@ -4,14 +4,16 @@ var bodyParser = require('body-parser');
 var _ = require('underscore');
 var bcrypt = require('bcryptjs');
 var db = require('./db');
+var middleware = require('./middleware.js')(db);
 var PORT = process.env.PORT || 3000;
 var todos = [];
 var todoNextId = 1;
 
+
 app.use(bodyParser.json());
 
 // GET /todos
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication, function(req, res) {
     var query = req.query;
     var where = {};
     if(query.hasOwnProperty('completed') && query.completed === 'true') {
@@ -34,7 +36,7 @@ app.get('/todos', function(req, res) {
 });
 
 // GET /todos/id
-app.get('/todos/:id', function(req, res)  {
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res)  {
     var todoId = parseInt(req.params.id, 10);
     db.todo.findById(todoId).then(function(todo) {
         if(!!todo) {
@@ -49,7 +51,7 @@ app.get('/todos/:id', function(req, res)  {
 });
 
 // POST /todos
-app.post('/todos', function(req, res) {
+app.post('/todos', middleware.requireAuthentication, function(req, res) {
     var body = _.pick(req.body, 'description', 'completed');
     db.todo.create(body).then(function(todo) {
         res.json(todo.toJSON());
@@ -59,7 +61,7 @@ app.post('/todos', function(req, res) {
 });
 
 //PUT /todos/:id
-app.put('/todos/:id', function(req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id, 10);
     var body = _.pick(req.body, 'description', 'completed');
     var attributes = {};
@@ -90,7 +92,7 @@ app.put('/todos/:id', function(req, res) {
 });
 
 // DELETE /todos/:id
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id, 10);
     db.todo.destroy({
         where: {
@@ -123,6 +125,7 @@ app.get('/users', function(req, res) {
         res.sendStatus(500).json(e);
     });
 });
+/*
 
 // GET /user/:id
 app.get('/users/:id', function(req, res) {
@@ -196,6 +199,8 @@ app.delete('/users/:id', function(req, res) {
         res.sendStatus(500);
     });
 });
+
+*/
 
 // POST /users/login
 app.post('/users/login', function(req, res) {
