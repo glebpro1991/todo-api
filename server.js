@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var bcrypt = require('bcryptjs');
 var db = require('./db');
 var PORT = process.env.PORT || 3000;
 var todos = [];
@@ -128,7 +129,7 @@ app.get('/users/:id', function(req, res) {
     var userId = parseInt(req.params.id, 10);
     db.user.findById(userId).then(function(user) {
         if(!!user) {
-            res.json(user.toJSON());
+            res.json(user.toPublicJSON());
         } else {
             res.sendStatus(404);
         }
@@ -141,7 +142,7 @@ app.get('/users/:id', function(req, res) {
 app.post('/users', function(req, res) {
     var body = _.pick(req.body, 'email', 'password');
     db.user.create(body).then(function(user) {
-        res.json(user.toJSON());
+        res.json(user.toPublicJSON());
     }, function (e) {
         res.sendStatus(400).json(e);
     });
@@ -196,9 +197,23 @@ app.delete('/users/:id', function(req, res) {
     });
 });
 
+// POST /users/login
+app.post('/users/login', function(req, res) {
+    var body = _.pick(req.body, 'email', 'password');
+    
+    db.user.authenticate(body).then(function(user) {
+        res.json(user.toPublicJSON());
+    }, function() {
+        res.sendStatus(401);
+    });
+
+    /*
+    */
+});
+
 
 // Create Model
-db.sequelize.sync().then(function() {
+db.sequelize.sync({force: true}).then(function() {
     app.listen(PORT, function() {
         console.log('express listening on port ' + PORT);
     })
