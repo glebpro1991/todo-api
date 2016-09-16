@@ -1,5 +1,6 @@
 // define a model for sqlite
 module.exports = function(sequelize, DataTypes) {
+    // all necessary validaiton is defined here
     return sequelize.define('todo', {
         description: {
             type: DataTypes.STRING,
